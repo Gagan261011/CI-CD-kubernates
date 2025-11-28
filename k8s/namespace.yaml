@@ -1,0 +1,10 @@
+# ============================================
+# NAMESPACE.YAML - Kubernetes Namespace for CRUD App
+# ============================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: crud-app
+  labels:
+    app: crud-app
+    environment: development

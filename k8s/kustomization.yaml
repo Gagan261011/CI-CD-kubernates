@@ -1,0 +1,22 @@
+# ============================================
+# KUSTOMIZATION.YAML - Kustomize Configuration
+# ============================================
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: crud-app
+
+resources:
+  - namespace.yaml
+  - deployment.yaml
+  - service.yaml
+
+commonLabels:
+  app: crud-app
+  environment: development
+  managed-by: jenkins
+
+images:
+  - name: crud-app
+    newName: NEXUS_IP:8082/crud-app
+    newTag: latest

@@ -1,0 +1,81 @@
+# ============================================
+# DEPLOYMENT.YAML - Kubernetes Deployment for CRUD App
+# ============================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crud-app
+  namespace: crud-app
+  labels:
+    app: crud-app
+    version: "1.0.0"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: crud-app
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: crud-app
+        version: "1.0.0"
+    spec:
+      containers:
+        - name: crud-app
+          # Image will be replaced by Jenkins pipeline
+          # Format: NEXUS_IP:8082/crud-app:BUILD_NUMBER
+          image: "${DOCKER_REGISTRY}/crud-app:${BUILD_TAG}"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          env:
+            - name: JAVA_OPTS
+              value: "-Xms256m -Xmx512m"
+            - name: SPRING_PROFILES_ACTIVE
+              value: "default"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+      # For pulling from private Nexus registry
+      imagePullSecrets:
+        - name: nexus-registry-secret
+      restartPolicy: Always
+---
+# ============================================
+# ConfigMap for Application Configuration
+# ============================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: crud-app-config
+  namespace: crud-app
+data:
+  SPRING_PROFILES_ACTIVE: "default"
+  SERVER_PORT: "8080"
